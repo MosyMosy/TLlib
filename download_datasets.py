@@ -3,13 +3,7 @@ import os
 from torchvision.datasets.utils import download_url
 
 
-for dataset in datasets.__all__:  
-    try:
-        list(map(lambda args: download(os.path.join("~/scratch/TLlib_Dataset", dataset.lower()), *args), datasets.__dict__[dataset].download_list))
-    except:
-        print(" ")
-        
-def download(root: str, name, archive_name: str, url_link: str):
+def download(root: str, archive_name: str, url_link: str):
     """
     Download file from internet url link.
 
@@ -27,3 +21,6 @@ def download(root: str, name, archive_name: str, url_link: str):
                 "Simply trying again may be fine.")
         exit(0)
             
+for i in range(1, len(datasets.__all__)):
+    for file in datasets.__dict__[datasets.__all__[i]].download_list:
+        download(os.path.join("~/scratch/TLlib_Dataset", datasets.__all__[i].lower()), archive_name = file[1], url_link = file[2])
