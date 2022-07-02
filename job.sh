@@ -52,6 +52,7 @@ echo "---------------------------------------<Run the program>------------------
 date +"%T"
 cd $SLURM_TMPDIR
 cd Transfer-Learning-Library
+cd examples/domain_adaptation/image_classification
 
 CUDA_VISIBLE_DEVICES=0 python adda.py TLlib_Dataset/office31 -d Office31 -s A -t W -a resnet50 --epochs 20 --seed 1 --log logs/adda/Office31_A2W
 
