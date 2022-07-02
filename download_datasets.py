@@ -8,6 +8,7 @@ for dataset in datasets.__all__:
         list(map(lambda args: download(os.path.join("~/scratch/TLlib_Dataset", dataset.lower()), *args), datasets.__dict__[dataset].download_list))
     except:
         print(" ")
+        
 def download(root: str, name, archive_name: str, url_link: str):
     """
     Download file from internet url link.
