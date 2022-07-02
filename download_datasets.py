@@ -4,12 +4,8 @@ from torchvision.datasets.utils import download_url
 
 
 for dataset in datasets.__all__:
-    
-    try:
-        list(map(lambda args: download(os.path.join("~/scratch/TLlib_Dataset", dataset.lower()), *args), datasets.__dict__[dataset].download_list))
-    except:
-        print("couldn't download the {}".format(dataset))
-        
+    list(map(lambda args: download(os.path.join("~/scratch/TLlib_Dataset", dataset.lower()), *args), datasets.__dict__[dataset].download_list))
+            
 def download(root: str, name, archive_name: str, url_link: str):
     """
     Download file from internet url link.
