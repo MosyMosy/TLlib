@@ -3,9 +3,9 @@ import os
 from torchvision.datasets.utils import download_url
 
 
-for dataset in datasets.__all__:
-    dataset =  datasets.__dict__[dataset]("", download=False)
-    list(map(lambda args: download(os.path.join("~/scratch/TLlib_Dataset", dataset.lower()), *args),dataset.download_list))
+for dataset_name in datasets.__all__:
+    dataset =  datasets.__dict__[dataset_name](root="", download=False)
+    list(map(lambda args: download(os.path.join("~/scratch/TLlib_Dataset", dataset_name.lower()), *args),dataset.download_list))
             
 def download(root: str, name, archive_name: str, url_link: str):
     """
