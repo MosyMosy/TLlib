@@ -21,7 +21,6 @@ def download(root: str, file_name: str, archive_name: str, url_link: str):
         If `file_name` already exists under path `root`, then it is not downloaded again.
         Else `archive_name` will be downloaded from `url_link` and extracted to `file_name`.
     """
-    print(os.path.join(root, file_name))
     if not os.path.exists(os.path.join(root, file_name)):
         print("Downloading {}".format(file_name))
         # if os.path.exists(os.path.join(root, archive_name)):
