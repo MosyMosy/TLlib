@@ -34,15 +34,6 @@ date +"%T"
 cd $SLURM_TMPDIR
 cp -r ~/scratch/TLlib_Dataset .
 
-echo "extract datasets"
-date +"%T"
-cd TLlib_Dataset
-cd Office31
-tar -xzf amazon.tgz
-tar -xzf dslr.tgz
-tar -xzf webcam.tgz
-unzip image_list.zip
-
 date +"%T"
 echo "----------------------------------< End of data preparation>--------------------------------"
 date +"%T"
@@ -60,5 +51,4 @@ echo "-----------------------------------<End of run the program>---------------
 date +"%T"
 echo "--------------------------------------<backup the result>-----------------------------------"
 date +"%T"
-# cd $SLURM_TMPDIR
 cp -r $SLURM_TMPDIR/logs/adda ~/scratch/Transfer-Learning-Library/logs/
