@@ -31,8 +31,8 @@ cp -r ~/scratch/Transfer-Learning-Library .
 
 echo "Copying the datasets"
 date +"%T"
-cd $SLURM_TMPDIR
-cp -r ~/scratch/Transfer-Learning-Library/TLlib_Dataset .
+cd $SLURM_TMPDIR/Transfer-Learning-Library
+cp -r ~/scratch/TLlib_Dataset .
 
 echo "extract datasets"
 date +"%T"
