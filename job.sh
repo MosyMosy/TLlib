@@ -27,7 +27,7 @@ echo "------------------------------------< Data preparation>-------------------
 echo "Copying the source code"
 date +"%T"
 cd $SLURM_TMPDIR
-cp -r ~/scratch/Transfer-Learning-Library .
+cp -r ~/scratch/TLlib .
 
 echo "Copying the datasets"
 date +"%T"
@@ -42,7 +42,7 @@ echo "--------------------------------------------------------------------------
 echo "---------------------------------------<Run the program>------------------------------------"
 date +"%T"
 cd $SLURM_TMPDIR
-cd Transfer-Learning-Library
+cd TLlib
 cd examples/domain_adaptation/image_classification
 
 CUDA_VISIBLE_DEVICES=0 python adda.py $SLURM_TMPDIR/TLlib_Dataset/office31 -d Office31 -s A -t W -a resnet50 --epochs 20 --seed 1 --log $SLURM_TMPDIR/logs/adda/Office31_A2W
@@ -51,4 +51,4 @@ echo "-----------------------------------<End of run the program>---------------
 date +"%T"
 echo "--------------------------------------<backup the result>-----------------------------------"
 date +"%T"
-cp -r $SLURM_TMPDIR/logs/adda ~/scratch/Transfer-Learning-Library/logs/
+cp -r $SLURM_TMPDIR/logs/adda ~/scratch/TLlib/logs/
