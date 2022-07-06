@@ -20,8 +20,8 @@ source ~/envs/TLlib/bin/activate
 
 echo "change TORCH_HOME environment variable"
 cd $SLURM_TMPDIR
-cp -r ~/scratch/model_zoo .
-export TORCH_HOME=$SLURM_TMPDIR/model_zoo
+cp -r ~/scratch/Pytorch_zoo .
+export TORCH_HOME=$SLURM_TMPDIR/Pytorch_zoo
 
 echo "------------------------------------< Data preparation>----------------------------------"
 echo "Copying the source code"
