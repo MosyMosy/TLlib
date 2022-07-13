@@ -168,7 +168,7 @@ def train(train_source_iter: ForeverDataIterator, train_target_iter: ForeverData
         predict_all, Feature_all = model(X_all)
         predict_s,  predict_t = predict_all.chunk(2, dim=0)
         loss_cl_, loss_ce_, loss_reg_ = NearestPrior().forward(Feature_all=Feature_all, logit_all=predict_all, y_source=labels_s, device=device)
-        loss_total = torch.tensor(0.0)
+        loss_total = torch.tensor(0.0).to(device)
         if  args.cl_weight != 0:
             loss_total += loss_cl_ * args.cl_weight
         if  args.ce_weight != 0:
@@ -181,13 +181,13 @@ def train(train_source_iter: ForeverDataIterator, train_target_iter: ForeverData
         optimizer.step()
         lr_scheduler.step()
 
-        cl_loss.update(loss_cl_, X_s.size(0))
-        ce_loss.update(loss_ce_, X_t.size(0))
-        reg_loss.update(loss_reg_, X_s.size(0))
+        cl_loss.update(loss_cl_.item(), X_s.size(0))
+        ce_loss.update(loss_ce_.item(), X_t.size(0))
+        reg_loss.update(loss_reg_.item(), X_s.size(0))
         
         
-        source_acc.update(accuracy(predict_s, labels_s), X_s.size(0))
-        target_acc.update(accuracy(predict_t, labels_t), X_t.size(0))
+        source_acc.update(accuracy(predict_s.item(), labels_s), X_s.size(0))
+        target_acc.update(accuracy(predict_t.item(), labels_t), X_t.size(0))
         
         # measure elapsed time
         batch_time.update(time.time() - end)
