@@ -88,8 +88,9 @@ class NearestPrior(nn.Module):
         var_all.to(device)
         
         # Gaussian similarity kernel
+        diagonal = 1 - torch.eye(all_size).to(device)
         similarity_all = torch.exp(-dist_all / (
-            2 * (var_all * sigma) ** 2)) * (1 - torch.eye(all_size).to(device))
+            2 * (var_all * sigma) ** 2)) * diagonal
 
         source_intra_similarity_max = torch.max(
             similarity_all[:source_size, :source_size], dim=1)[0]
@@ -105,6 +106,6 @@ class NearestPrior(nn.Module):
         target_samples_dist = torch.abs(
             target_intra_similarity_max - target_inter_similarity_max).mean()
 
-        return (source_samples_dist + target_samples_dist).to(device)
+        return (source_samples_dist.to(device) + target_samples_dist.to(device))
 
     
