@@ -6,6 +6,22 @@ class NearestPrior(nn.Module):
     def __init__(self):
         super().__init__()
 
+    def forward(self, Feature_all, logit_all, y_source):
+        source_size = torch.numel(y_source)
+        Feature_source = Feature_all[:source_size]
+        Feature_target = Feature_all[source_size:]
+
+        logit_source = logit_all[:source_size]
+        logit_target = logit_all[source_size:]
+
+        loss_cl = nn.CrossEntropyLoss()(logit_source, y_source)
+        loss_ce = NearestPrior.entropy(logit_target.softmax(1), dim=1)
+        # loss_ce = ce_loss(logit_target, Feature_target)
+        loss_reg = NearestPrior.reg_loss_dist(Feature_all, source_size)
+
+        return loss_cl, loss_ce, loss_reg
+
+
     @staticmethod
     def entropy(p, dim=1):
         p = torch.clamp(p, min=1e-8)
@@ -90,17 +106,4 @@ class NearestPrior(nn.Module):
 
         return source_samples_dist + target_samples_dist
 
-    def forward(self, Feature_all, logit_all, y_source):
-        source_size = torch.numel(y_source)
-        Feature_source = Feature_all[:source_size]
-        Feature_target = Feature_all[source_size:]
-
-        logit_source = logit_all[:source_size]
-        logit_target = logit_all[source_size:]
-
-        loss_cl = nn.CrossEntropyLoss()(logit_source, y_source)
-        loss_ce = NearestPrior.entropy(logit_target.softmax(1), dim=1)
-        # loss_ce = ce_loss(logit_target, Feature_target)
-        loss_reg = NearestPrior.reg_loss_dist(Feature_all, source_size)
-
-        return loss_cl, loss_ce, loss_reg
+    

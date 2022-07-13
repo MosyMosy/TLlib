@@ -167,7 +167,7 @@ def train(train_source_iter: ForeverDataIterator, train_target_iter: ForeverData
         X_all = torch.cat((X_s, X_t), dim=0)
         predict_all, Feature_all = model(X_all)
         predict_s,  predict_t = predict_all.chunk(2, dim=0)
-        loss_cl_, loss_ce_, loss_reg_ = NearestPrior.forward(Feature_all=Feature_all, logit_all=predict_all, y_source=labels_s)
+        loss_cl_, loss_ce_, loss_reg_ = NearestPrior().forward(Feature_all=Feature_all, logit_all=predict_all, y_source=labels_s)
         loss_total = torch.tensor(0.0)
         if  args.cl_weight != 0:
             loss_total += loss_cl_ * args.cl_weight
