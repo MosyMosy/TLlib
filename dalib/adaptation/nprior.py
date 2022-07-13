@@ -44,7 +44,7 @@ class NearestPrior(nn.Module):
             dist_all[source_size:, source_size:], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # target_intra_var
         var_all[source_size:, :source_size] = torch.sqrt(torch.max(torch.topk(
             dist_all[source_size:, :source_size], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # target_inter_var
-        var_all.to(device)
+        var_all = var_all.to(device)
         # Gaussian similarity kernel
         similarity_all = torch.exp(-dist_all / (
             2 * (var_all * sigma) ** 2)) * (1 - torch.eye(all_size).to(device))
@@ -85,11 +85,10 @@ class NearestPrior(nn.Module):
             dist_all[source_size:, source_size:], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # target_intra_var
         var_all[source_size:, :source_size] = torch.sqrt(torch.max(torch.topk(
             dist_all[source_size:, :source_size], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # target_inter_var
-        var_all.to(device)
+        var_all = var_all.to(device)
         
         # Gaussian similarity kernel
         diagonal = 1 - torch.eye(all_size).to(device)
-        print('{} {} {}'.format(dist_all.device, var_all.device, diagonal.device))
         similarity_all = torch.exp(-dist_all / (
             2 * (var_all * sigma) ** 2)) * diagonal
 
