@@ -186,8 +186,8 @@ def train(train_source_iter: ForeverDataIterator, train_target_iter: ForeverData
         reg_loss.update(loss_reg_.item(), X_s.size(0))
         
         
-        source_acc.update(accuracy(predict_s.item(), labels_s), X_s.size(0))
-        target_acc.update(accuracy(predict_t.item(), labels_t), X_t.size(0))
+        source_acc.update(accuracy(predict_s, labels_s).item(), X_s.size(0))
+        target_acc.update(accuracy(predict_t, labels_t).item(), X_t.size(0))
         
         # measure elapsed time
         batch_time.update(time.time() - end)
