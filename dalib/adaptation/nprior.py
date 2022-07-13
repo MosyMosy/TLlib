@@ -89,6 +89,7 @@ class NearestPrior(nn.Module):
         
         # Gaussian similarity kernel
         diagonal = 1 - torch.eye(all_size).to(device)
+        print('{} {} {}'.format(dist_all.device, var_all.device, diagonal.device))
         similarity_all = torch.exp(-dist_all / (
             2 * (var_all * sigma) ** 2)) * diagonal
 
