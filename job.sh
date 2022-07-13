@@ -51,4 +51,4 @@ echo "-----------------------------------<End of run the program>---------------
 date +"%T"
 echo "--------------------------------------<backup the result>-----------------------------------"
 date +"%T"
-cp -r $SLURM_TMPDIR/logs/adda ~/scratch/TLlib/logs/
+cp -r $SLURM_TMPDIR/logs/nprior ~/scratch/TLlib/logs/
