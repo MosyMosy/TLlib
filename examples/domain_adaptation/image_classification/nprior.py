@@ -156,6 +156,7 @@ def train(train_source_iter: ForeverDataIterator, train_target_iter: ForeverData
         X_s = X_s.to(device)
         X_t = X_t.to(device)
         labels_s = labels_s.to(device)
+        labels_t = labels_s.to(labels_t)
 
         # measure data loading time
         data_time.update(time.time() - end)
