@@ -182,14 +182,14 @@ def distance_values(Feature_all, source_size, device, sigma=1):
     # variances for Gaussian similarity kernel
     k = min(5, min(source_size, (all_size - source_size)))
     var_all = torch.zeros(all_size, all_size)
-    var_all[:source_size, :source_size] = torch.sqrt(torch.max(torch.topk(
-        dist_all[:source_size, :source_size], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # source_intra_var
-    var_all[:source_size, source_size:] = torch.sqrt(torch.max(torch.topk(
-        dist_all[:source_size, source_size:], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # source_inter_var
-    var_all[source_size:, source_size:] = torch.sqrt(torch.max(torch.topk(
-        dist_all[source_size:, source_size:], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # target_intra_var
-    var_all[source_size:, :source_size] = torch.sqrt(torch.max(torch.topk(
-        dist_all[source_size:, :source_size], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # target_inter_var
+    var_all[:source_size, :source_size] = torch.transpose(torch.sqrt(torch.max(torch.topk(
+        dist_all[:source_size, :source_size], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8), dim0=0, dim1=1)  # source_intra_var
+    var_all[:source_size, source_size:] = torch.transpose(torch.sqrt(torch.max(torch.topk(
+        dist_all[:source_size, source_size:], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8), dim0=0, dim1=1)  # source_inter_var
+    var_all[source_size:, source_size:] = torch.transpose(torch.sqrt(torch.max(torch.topk(
+        dist_all[source_size:, source_size:], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8), dim0=0, dim1=1)  # target_intra_var
+    var_all[source_size:, :source_size] = torch.transpose(torch.sqrt(torch.max(torch.topk(
+        dist_all[source_size:, :source_size], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8), dim0=0, dim1=1)  # target_inter_var
     var_all = var_all.to(device)
     # Gaussian similarity kernel
     similarity_all = torch.exp(-dist_all / (
