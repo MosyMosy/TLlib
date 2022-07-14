@@ -176,7 +176,9 @@ def distance_values(Feature_all, source_size, device, sigma=1):
     all_size = Feature_all.size()[0]
     dist_all = torch.cdist(Feature_all, Feature_all, p=2,
                            compute_mode='use_mm_for_euclid_dist_if_necessary').to(device)
-
+    print(dist_all.size())
+    print(all_size)
+    print(source_size)
     # variances for Gaussian similarity kernel
     k = min(5, min(source_size, (all_size - source_size)))
     var_all = torch.zeros(all_size, all_size)
