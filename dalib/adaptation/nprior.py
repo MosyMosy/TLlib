@@ -17,7 +17,7 @@ class NearestPrior(nn.Module):
         loss_cl = nn.CrossEntropyLoss()(logit_source, y_source)
         loss_ce = NearestPrior.entropy(logit_target.softmax(1), dim=1)
         # loss_ce = ce_loss(logit_target, Feature_target)
-        loss_reg = NearestPrior.reg_loss_dist(Feature_all= Feature_all, source_size= source_size, device=device)
+        loss_reg = NearestPrior.reg_loss_entropy(Feature_all= Feature_all, source_size= source_size, device=device)
 
         return loss_cl, loss_ce, loss_reg
 
