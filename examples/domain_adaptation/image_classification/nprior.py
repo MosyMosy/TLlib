@@ -116,6 +116,8 @@ def main(args: argparse.Namespace):
         Feature_all = torch.cat((source_feature, target_feature), dim=0)
         source_intra_similarity_max, source_inter_similarity_max, target_intra_similarity_max, target_inter_similarity_max = distance_values(
             Feature_all, source_size, device)
+        
+        torch.set_printoptions(profile="full")
         print(source_intra_similarity_max)
         print(source_inter_similarity_max)
         print(target_intra_similarity_max)
