@@ -1,6 +1,14 @@
 """
 
 """
+import utils
+from common.utils.analysis import collect_feature, tsne, a_distance
+from common.utils.logger import CompleteLogger
+from common.utils.meter import AverageMeter, ProgressMeter
+from common.utils.metric import accuracy, binary_accuracy
+from common.utils.data import ForeverDataIterator
+from common.modules.classifier import ImageClassifier
+from dalib.adaptation.nprior import NearestPrior
 import random
 import time
 import warnings
@@ -19,16 +27,8 @@ import torch.nn.functional as F
 
 sys.path.append('../../..')
 # from dalib.modules.domain_discriminator import DomainDiscriminator
-from dalib.adaptation.nprior import NearestPrior
-from common.modules.classifier import ImageClassifier
-from common.utils.data import ForeverDataIterator
-from common.utils.metric import accuracy, binary_accuracy
-from common.utils.meter import AverageMeter, ProgressMeter
-from common.utils.logger import CompleteLogger
-from common.utils.analysis import collect_feature, tsne, a_distance
 
 sys.path.append('.')
-import utils
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -59,13 +59,16 @@ def main(args: argparse.Namespace):
     print("val_transform: ", val_transform)
 
     train_source_dataset, train_target_dataset, val_dataset, test_dataset, num_classes, args.class_names = \
-        utils.get_dataset(args.data, args.root, args.source, args.target, train_transform, val_transform)
+        utils.get_dataset(args.data, args.root, args.source,
+                          args.target, train_transform, val_transform)
     train_source_loader = DataLoader(train_source_dataset, batch_size=args.batch_size,
                                      shuffle=True, num_workers=args.workers, drop_last=True)
     train_target_loader = DataLoader(train_target_dataset, batch_size=args.batch_size,
                                      shuffle=True, num_workers=args.workers, drop_last=True)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
-    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
+    val_loader = DataLoader(
+        val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
+    test_loader = DataLoader(
+        test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
 
     train_source_iter = ForeverDataIterator(train_source_loader)
     train_target_iter = ForeverDataIterator(train_target_loader)
@@ -81,26 +84,42 @@ def main(args: argparse.Namespace):
     optimizer = SGD(classifier.get_parameters(), args.lr, momentum=args.momentum, weight_decay=args.weight_decay,
                     nesterov=True)
 
-    lr_scheduler = LambdaLR(optimizer, lambda x: args.lr * (1. + args.lr_gamma * float(x)) ** (-args.lr_decay))
+    lr_scheduler = LambdaLR(optimizer, lambda x: args.lr *
+                            (1. + args.lr_gamma * float(x)) ** (-args.lr_decay))
 
     # resume from the best checkpoint
     if args.phase != 'train':
-        checkpoint = torch.load(logger.get_checkpoint_path('best'), map_location='cpu')
+        checkpoint = torch.load(
+            logger.get_checkpoint_path('best'), map_location='cpu')
         classifier.load_state_dict(checkpoint)
 
     # analysis the model
     if args.phase == 'analysis':
         # extract features from both domains
-        feature_extractor = nn.Sequential(classifier.backbone, classifier.pool_layer, classifier.bottleneck).to(device)
-        source_feature = collect_feature(train_source_loader, feature_extractor, device)
-        target_feature = collect_feature(train_target_loader, feature_extractor, device)
+        feature_extractor = nn.Sequential(
+            classifier.backbone, classifier.pool_layer, classifier.bottleneck).to(device)
+        source_feature = collect_feature(
+            train_source_loader, feature_extractor, device)
+        target_feature = collect_feature(
+            train_target_loader, feature_extractor, device)
         # plot t-SNE
         tSNE_filename = osp.join(logger.visualize_directory, 'TSNE.pdf')
         tsne.visualize(source_feature, target_feature, tSNE_filename)
         print("Saving t-SNE to", tSNE_filename)
         # calculate A-distance, which is a measure for distribution discrepancy
-        A_distance = a_distance.calculate(source_feature, target_feature, device)
+        A_distance = a_distance.calculate(
+            source_feature, target_feature, device)
         print("A-distance =", A_distance)
+
+        # regularized distance distribution
+        source_size = source_feature.size()[0]
+        Feature_all = torch.cat((source_feature, target_feature), dim=0)
+        source_intra_similarity_max, source_inter_similarity_max, target_intra_similarity_max, target_inter_similarity_max = distance_values(
+            Feature_all, source_size, device)
+        print(source_intra_similarity_max)
+        print(source_inter_similarity_max)
+        print(target_intra_similarity_max)
+        print(target_inter_similarity_max)
         return
 
     if args.phase == 'test':
@@ -113,15 +132,18 @@ def main(args: argparse.Namespace):
     for epoch in range(args.epochs):
         print("lr classifier:", lr_scheduler.get_lr())
         # train for one epoch
-        train(train_source_iter, train_target_iter, classifier, optimizer, lr_scheduler, epoch, args)
+        train(train_source_iter, train_target_iter,
+              classifier, optimizer, lr_scheduler, epoch, args)
 
         # evaluate on validation set
         acc1 = utils.validate(val_loader, classifier, args, device)
 
         # remember best acc@1 and save checkpoint
-        torch.save(classifier.state_dict(), logger.get_checkpoint_path('latest'))
+        torch.save(classifier.state_dict(),
+                   logger.get_checkpoint_path('latest'))
         if acc1 > best_acc1:
-            shutil.copy(logger.get_checkpoint_path('latest'), logger.get_checkpoint_path('best'))
+            shutil.copy(logger.get_checkpoint_path('latest'),
+                        logger.get_checkpoint_path('best'))
         best_acc1 = max(acc1, best_acc1)
 
     print("best_acc1 = {:3.1f}".format(best_acc1))
@@ -130,21 +152,57 @@ def main(args: argparse.Namespace):
     classifier.load_state_dict(torch.load(logger.get_checkpoint_path('best')))
     acc1 = utils.validate(test_loader, classifier, args, device)
     print("test_acc1 = {:3.1f}".format(acc1))
-    
+
     # analysis the model
     # extract features from both domains
-    feature_extractor = nn.Sequential(classifier.backbone, classifier.pool_layer, classifier.bottleneck).to(device)
-    source_feature = collect_feature(train_source_loader, feature_extractor, device)
-    target_feature = collect_feature(train_target_loader, feature_extractor, device)
+    feature_extractor = nn.Sequential(
+        classifier.backbone, classifier.pool_layer, classifier.bottleneck).to(device)
+    source_feature = collect_feature(
+        train_source_loader, feature_extractor, device)
+    target_feature = collect_feature(
+        train_target_loader, feature_extractor, device)
     # plot t-SNE
     tSNE_filename = osp.join(logger.visualize_directory, 'TSNE.pdf')
     tsne.visualize(source_feature, target_feature, tSNE_filename)
     print("Saving t-SNE to", tSNE_filename)
     # calculate A-distance, which is a measure for distribution discrepancy
     A_distance = a_distance.calculate(source_feature, target_feature, device)
-    print("A-distance =", A_distance)    
+    print("A-distance =", A_distance)
 
     logger.close()
+
+
+def distance_values(Feature_all, source_size, device, sigma=1):
+    all_size = Feature_all.size()[0]
+    dist_all = torch.cdist(Feature_all, Feature_all, p=2,
+                           compute_mode='use_mm_for_euclid_dist_if_necessary').to(device)
+
+    # variances for Gaussian similarity kernel
+    k = min(5, min(source_size, (all_size - source_size)))
+    var_all = torch.zeros(all_size, all_size)
+    var_all[:source_size, :source_size] = torch.sqrt(torch.max(torch.topk(
+        dist_all[:source_size, :source_size], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # source_intra_var
+    var_all[:source_size, source_size:] = torch.sqrt(torch.max(torch.topk(
+        dist_all[:source_size, source_size:], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # source_inter_var
+    var_all[source_size:, source_size:] = torch.sqrt(torch.max(torch.topk(
+        dist_all[source_size:, source_size:], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # target_intra_var
+    var_all[source_size:, :source_size] = torch.sqrt(torch.max(torch.topk(
+        dist_all[source_size:, :source_size], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # target_inter_var
+    var_all = var_all.to(device)
+    # Gaussian similarity kernel
+    similarity_all = torch.exp(-dist_all / (
+        2 * (var_all * sigma) ** 2)) * (1 - torch.eye(all_size).to(device))
+
+    source_intra_similarity_max = torch.max(
+        similarity_all[:source_size, :source_size], dim=1)[0]
+    source_inter_similarity_max = torch.max(
+        similarity_all[:source_size, source_size:], dim=1)[0]
+    target_intra_similarity_max = torch.max(
+        similarity_all[source_size:, source_size:], dim=1)[0]
+    target_inter_similarity_max = torch.max(
+        similarity_all[source_size:, :source_size], dim=1)[0]
+
+    return source_intra_similarity_max, source_inter_similarity_max, target_intra_similarity_max, target_inter_similarity_max
 
 
 def train(train_source_iter: ForeverDataIterator, train_target_iter: ForeverDataIterator, model: ImageClassifier,
@@ -158,7 +216,8 @@ def train(train_source_iter: ForeverDataIterator, train_target_iter: ForeverData
     target_acc = AverageMeter('target_acc', ':3.1f')
     progress = ProgressMeter(
         args.iters_per_epoch,
-        [batch_time, data_time, cl_loss, ce_loss, reg_loss, source_acc, target_acc],
+        [batch_time, data_time, cl_loss, ce_loss,
+            reg_loss, source_acc, target_acc],
         prefix="Epoch: [{}]".format(epoch))
 
     end = time.time()
@@ -174,20 +233,20 @@ def train(train_source_iter: ForeverDataIterator, train_target_iter: ForeverData
         # measure data loading time
         data_time.update(time.time() - end)
 
-        
         model.train()
         optimizer.zero_grad()
-        
+
         X_all = torch.cat((X_s, X_t), dim=0)
         predict_all, Feature_all = model(X_all)
         predict_s,  predict_t = predict_all.chunk(2, dim=0)
-        loss_cl_, loss_ce_, loss_reg_ = NearestPrior().forward(Feature_all=Feature_all, logit_all=predict_all, y_source=labels_s, device=device)
+        loss_cl_, loss_ce_, loss_reg_ = NearestPrior().forward(
+            Feature_all=Feature_all, logit_all=predict_all, y_source=labels_s, device=device)
         loss_total = torch.tensor(0.0).to(device)
-        if  args.cl_weight != 0:
+        if args.cl_weight != 0:
             loss_total += loss_cl_ * args.cl_weight
-        if  args.ce_weight != 0:
+        if args.ce_weight != 0:
             loss_total += loss_ce_ * args.ce_weight
-        if  args.reg_weight != 0:
+        if args.reg_weight != 0:
             loss_total += loss_reg_ * args.reg_weight
         if loss_total.item() != 0:
             loss_total.backward()
@@ -198,11 +257,10 @@ def train(train_source_iter: ForeverDataIterator, train_target_iter: ForeverData
         cl_loss.update(loss_cl_.item(), X_s.size(0))
         ce_loss.update(loss_ce_.item(), X_t.size(0))
         reg_loss.update(loss_reg_.item(), X_s.size(0))
-        
-        
+
         source_acc.update(accuracy(predict_s, labels_s)[0].item(), X_s.size(0))
         target_acc.update(accuracy(predict_t, labels_t)[0].item(), X_t.size(0))
-        
+
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
@@ -212,7 +270,8 @@ def train(train_source_iter: ForeverDataIterator, train_target_iter: ForeverData
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='NPrior for universal Domain Adaptation')
+    parser = argparse.ArgumentParser(
+        description='NPrior for universal Domain Adaptation')
     # dataset parameters
     parser.add_argument('root', metavar='DIR',
                         help='root path of dataset')
@@ -241,7 +300,8 @@ if __name__ == '__main__':
                         help='Dimension of bottleneck')
     parser.add_argument('--no-pool', action='store_true',
                         help='no pool layer after the feature extractor.')
-    parser.add_argument('--scratch', action='store_true', help='whether train from scratch.')
+    parser.add_argument('--scratch', action='store_true',
+                        help='whether train from scratch.')
     parser.add_argument('--cl_weight', default=1, type=float,
                         help='the weight hyper-parameter for classification loss')
     parser.add_argument('--ce_weight', default=1, type=float,
@@ -256,8 +316,10 @@ if __name__ == '__main__':
                         metavar='LR', help='initial learning rate of the classifier', dest='lr')
     parser.add_argument('--lr-d', default=0.01, type=float,
                         help='initial learning rate of the domain discriminator')
-    parser.add_argument('--lr-gamma', default=0.001, type=float, help='parameter for lr scheduler')
-    parser.add_argument('--lr-decay', default=0.75, type=float, help='parameter for lr scheduler')
+    parser.add_argument('--lr-gamma', default=0.001,
+                        type=float, help='parameter for lr scheduler')
+    parser.add_argument('--lr-decay', default=0.75,
+                        type=float, help='parameter for lr scheduler')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                         help='momentum')
     parser.add_argument('--wd', '--weight-decay', default=1e-3, type=float,
