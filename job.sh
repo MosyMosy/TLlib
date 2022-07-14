@@ -5,7 +5,7 @@
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-type=REQUEUE
 #SBATCH --mail-type=ALL
-#SBATCH --job-name=nprior_200
+#SBATCH --job-name=nprior_20_101
 #SBATCH --output=%x-%j.out
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
@@ -45,10 +45,10 @@ cd $SLURM_TMPDIR
 cd TLlib
 cd examples/domain_adaptation/image_classification
 
-CUDA_VISIBLE_DEVICES=0 python nprior.py $SLURM_TMPDIR/TLlib_Dataset/office31 -d Office31 -s A -t W -a resnet50 --epochs 200 --seed 1 --log $SLURM_TMPDIR/TLlib/logs/nprior_200/Office31_A2W
+CUDA_VISIBLE_DEVICES=0 python nprior.py $SLURM_TMPDIR/TLlib_Dataset/office31 -d Office31 -s A -t W -a resnet50 --epochs 200 --seed 1 --log $SLURM_TMPDIR/TLlib/logs/nprior_20_101/Office31_A2W
 
 echo "-----------------------------------<End of run the program>---------------------------------"
 date +"%T"
 echo "--------------------------------------<backup the result>-----------------------------------"
 date +"%T"
-cp -r $SLURM_TMPDIR/TLlib/logs/nprior_200 ~/scratch/TLlib/logs/nprior_200
+cp -r $SLURM_TMPDIR/TLlib/logs/nprior_20_101 ~/scratch/TLlib/logs/nprior_20_101
