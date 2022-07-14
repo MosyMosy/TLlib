@@ -130,6 +130,19 @@ def main(args: argparse.Namespace):
     classifier.load_state_dict(torch.load(logger.get_checkpoint_path('best')))
     acc1 = utils.validate(test_loader, classifier, args, device)
     print("test_acc1 = {:3.1f}".format(acc1))
+    
+    # analysis the model
+    # extract features from both domains
+    feature_extractor = nn.Sequential(classifier.backbone, classifier.pool_layer, classifier.bottleneck).to(device)
+    source_feature = collect_feature(train_source_loader, feature_extractor, device)
+    target_feature = collect_feature(train_target_loader, feature_extractor, device)
+    # plot t-SNE
+    tSNE_filename = osp.join(logger.visualize_directory, 'TSNE.pdf')
+    tsne.visualize(source_feature, target_feature, tSNE_filename)
+    print("Saving t-SNE to", tSNE_filename)
+    # calculate A-distance, which is a measure for distribution discrepancy
+    A_distance = a_distance.calculate(source_feature, target_feature, device)
+    print("A-distance =", A_distance)    
 
     logger.close()
 

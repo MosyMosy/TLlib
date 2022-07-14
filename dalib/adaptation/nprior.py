@@ -24,8 +24,7 @@ class NearestPrior(nn.Module):
 
     @staticmethod
     def entropy(p, dim=1):
-        p = torch.clamp(p, min=1e-8)
-        return torch.sum(-p * torch.log2(p), dim=dim).mean()
+        return torch.sum(-p * torch.log2(torch.clamp(p, min=1e-8)), dim=dim).mean()
 
     @staticmethod
     def reg_loss_entropy(Feature_all, source_size, device, sigma=1):
