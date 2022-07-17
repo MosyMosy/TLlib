@@ -174,29 +174,9 @@ def main(args: argparse.Namespace):
     logger.close()
 
 
-def distance_values(Feature_all, source_size, device, sigma=1):
-    all_size = Feature_all.size()[0]
-    dist_all = torch.cdist(Feature_all, Feature_all, p=2,
-                           compute_mode='use_mm_for_euclid_dist_if_necessary').to(device)
-    print(dist_all.size())
-    print(all_size)
-    print(source_size)
-    # variances for Gaussian similarity kernel
-    k = min(5, min(source_size, (all_size - source_size)))
-    var_all = torch.zeros(all_size, all_size)
-    var_all[:source_size, :source_size] = torch.sqrt(torch.max(torch.topk(
-        dist_all[:source_size, :source_size], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # source_intra_var
-    var_all[source_size:, :source_size] = torch.sqrt(torch.max(torch.topk(
-        dist_all[:source_size, source_size:], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # source_inter_var
-    var_all[source_size:, source_size:] = torch.sqrt(torch.max(torch.topk(
-        dist_all[source_size:, source_size:], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # target_intra_var
-    var_all[:source_size, source_size:] = torch.sqrt(torch.max(torch.topk(
-        dist_all[source_size:, :source_size], k=k, dim=1, largest=False).values, dim=1)[0] + 1e-8)  # target_inter_var
-    var_all = torch.transpose(var_all, dim0=0, dim1=1)
-    var_all = var_all.to(device)
-    # Gaussian similarity kernel
-    similarity_all = torch.exp(-dist_all / (
-        2 * (var_all * sigma) ** 2)) * (1 - torch.eye(all_size).to(device))
+def distance_values(Feature_all, source_size, device, k=1):
+    
+    similarity_all = NearestPrior.gaussian_similarity_kernel(Feature_all, source_size, device, k)
 
     source_intra_similarity_max = torch.max(
         similarity_all[:source_size, :source_size], dim=1)[0]
