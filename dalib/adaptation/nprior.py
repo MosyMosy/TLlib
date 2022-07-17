@@ -64,7 +64,7 @@ class NearestPrior(nn.Module):
         all_size = Feature_all.size()[0]
         dist_all = torch.cdist(Feature_all, Feature_all, p=2,
                             compute_mode='use_mm_for_euclid_dist_if_necessary').to(device)
-        dist_all = dist_all + ((dist_all.max().detach() + 1) * torch.eye(all_size))
+        dist_all = dist_all + ((dist_all.max().detach().to(device) + 1) * torch.eye(all_size).to(device))
         
         # variances for Gaussian similarity kernel
         k = min(5, min(source_size, (all_size - source_size)))
