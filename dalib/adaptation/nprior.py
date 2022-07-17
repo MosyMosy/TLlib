@@ -23,8 +23,18 @@ class NearestPrior(nn.Module):
 
 
     @staticmethod
-    def entropy(p, dim=1):
-        return torch.sum(-p * torch.log2(torch.clamp(p, min=1e-8)), dim=dim).mean()
+    def entropy(p, dim=1, reduction='mean'):
+        if p.dim() == 1:
+            entr = torch.sum(-p * torch.log2(torch.clamp(p, min=1e-8)))
+        else:
+            entr = torch.sum(-p * torch.log2(torch.clamp(p, min=1e-8)), dim=dim)
+
+        if reduction == 'mean':
+            entr = entr.mean()
+        elif reduction == 'sum':
+            entr = entr.sum()
+
+        return entr
 
     @staticmethod
     def reg_loss_entropy(Feature_all, source_size, device, k=1):
