@@ -45,7 +45,7 @@ cd $SLURM_TMPDIR
 cd TLlib
 cd examples/domain_adaptation/image_classification
 
-CUDA_VISIBLE_DEVICES=0 python nprior.py $SLURM_TMPDIR/TLlib_Dataset/office31 -d Office31 -s A -t W -a resnet50 --epochs 200 --seed 1 --log $SLURM_TMPDIR/TLlib/logs/nprior_20_101/Office31_A2W --ce_weight 0
+CUDA_VISIBLE_DEVICES=0 python nprior.py $SLURM_TMPDIR/TLlib_Dataset/office31 -d Office31 -s A -t W -a resnet50 --epochs 20 --seed 1 --log $SLURM_TMPDIR/TLlib/logs/nprior_20_101/Office31_A2W --ce_weight 0
 
 echo "-----------------------------------<End of run the program>---------------------------------"
 date +"%T"
